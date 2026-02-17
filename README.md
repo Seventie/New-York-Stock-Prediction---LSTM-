@@ -57,12 +57,27 @@ From the notebook config:
 - Train setup: `batch_size=64`, `epochs=40`, with early stopping
 
 ```mermaid
-flowchart LR
-    A["Input sequence (29 timesteps x 4 features)"] --> B["LSTM layer: 96 units, return_sequences=True"]
-    B --> C["Dropout: 0.15"]
-    C --> D["LSTM layer: 96 units, return_sequences=False"]
-    D --> E["Dropout: 0.15"]
-    E --> F["Dense: 4 outputs (next OHLC)"]
+flowchart TB
+    A["Input Sequence
+    (29 timesteps x 4 features)"] --> B["LSTM Block 1
+    96 units, return_sequences=True"]
+    B --> C["Dropout
+    rate = 0.15"]
+    C --> D["LSTM Block 2
+    96 units, return_sequences=False"]
+    D --> E["Dropout
+    rate = 0.15"]
+    E --> F["Dense Output Layer
+    4 neurons (open, high, low, close)"]
+    F --> G["Predicted Next OHLC"]
+
+    classDef layer fill:#1f2937,stroke:#60a5fa,stroke-width:2px,color:#ffffff;
+    classDef input fill:#0b3b2e,stroke:#34d399,stroke-width:2px,color:#ffffff;
+    classDef output fill:#3b0b2f,stroke:#f472b6,stroke-width:2px,color:#ffffff;
+
+    class A input;
+    class B,C,D,E,F layer;
+    class G output;
 ```
 
 ## RNN vs GRU vs LSTM (Architecture View)
