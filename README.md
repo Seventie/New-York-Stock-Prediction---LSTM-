@@ -23,17 +23,17 @@ You can change the ticker in the configuration cell and rerun.
 
 ```mermaid
 flowchart TD
-    A[Load Kaggle Dataset] --> B[Validate Ticker]
-    B --> C[EDA Visuals<br/>Candlestick + Volume<br/>Trend + Returns<br/>Correlation Heatmap]
-    C --> D[Preprocessing<br/>Drop date/symbol/volume<br/>Keep OHLC]
-    D --> E[MinMax Normalize OHLC]
-    E --> F[Build Sliding Sequences]
-    F --> G[Train/Valid/Test Split]
-    G --> H[Build LSTM Model]
-    H --> I[Train with EarlyStopping + Checkpoint]
-    I --> J[Evaluate<br/>MAE/RMSE/Direction Accuracy]
-    J --> K[Prediction + Residual Visuals]
-    K --> L[Export Artifacts<br/>.keras + config.json + preprocess_meta.pkl]
+    A["Load Kaggle NYSE dataset"] --> B["Validate ticker"]
+    B --> C["EDA visuals: candlestick, volume, trend, returns, correlation"]
+    C --> D["Preprocess: drop date/symbol/volume and keep OHLC"]
+    D --> E["Normalize OHLC with MinMax"]
+    E --> F["Build sliding window sequences"]
+    F --> G["Split to train / validation / test"]
+    G --> H["Build two-layer LSTM"]
+    H --> I["Train with early stopping and checkpoint"]
+    I --> J["Evaluate with MAE, RMSE, direction accuracy"]
+    J --> K["Plot predictions and residuals"]
+    K --> L["Export artifacts (.keras, config.json, preprocess_meta.pkl)"]
 ```
 
 ## Why This Pipeline
@@ -58,12 +58,11 @@ From the notebook config:
 
 ```mermaid
 flowchart LR
-    A[Input Sequence<br/>shape: (29, 4)] --> B[LSTM 96<br/>return_sequences=True]
-    B --> C[Dropout 0.15]
-    C --> D[LSTM 96<br/>return_sequences=False]
-    D --> E[Dropout 0.15]
-    E --> F[Dense 4]
-    F --> G[Predicted Next OHLC]
+    A["Input sequence (29 timesteps x 4 features)"] --> B["LSTM layer: 96 units, return_sequences=True"]
+    B --> C["Dropout: 0.15"]
+    C --> D["LSTM layer: 96 units, return_sequences=False"]
+    D --> E["Dropout: 0.15"]
+    E --> F["Dense: 4 outputs (next OHLC)"]
 ```
 
 ## RNN vs GRU vs LSTM (Architecture View)
@@ -72,8 +71,8 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-    A[x_t] --> B[h_t = tanh(Wx + Uh + b)]
-    B --> C[y_t]
+    A["x_t"] --> B["Hidden state h_t = tanh(Wx + Uh + b)"]
+    B --> C["y_t"]
 ```
 
 - Pros: simple, fast, fewer parameters.
@@ -83,10 +82,12 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-    A[x_t, h_t-1] --> B[Update Gate z_t]
-    A --> C[Reset Gate r_t]
-    A --> D[Candidate h_t~]
-    B --> E[h_t = (1-z_t)h_t-1 + z_t h_t~]
+    A["x_t and h_{t-1}"] --> B["Update gate z_t"]
+    A --> C["Reset gate r_t"]
+    A --> D["Candidate state h_t_tilde"]
+    C --> D
+    B --> E["h_t = (1 - z_t) * h_{t-1} + z_t * h_t_tilde"]
+    D --> E
 ```
 
 - Pros: faster than LSTM, fewer gates/parameters.
@@ -96,14 +97,14 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-    A[x_t, h_t-1, c_t-1] --> B[Forget Gate f_t]
-    A --> C[Input Gate i_t]
-    A --> D[Candidate c_t~]
-    B --> E[c_t]
+    A["x_t, h_{t-1}, c_{t-1}"] --> B["Forget gate f_t"]
+    A --> C["Input gate i_t"]
+    A --> D["Candidate cell c_t_tilde"]
+    B --> E["Cell state c_t"]
     C --> E
     D --> E
-    E --> F[Output Gate o_t]
-    F --> G[h_t]
+    E --> F["Output gate o_t"]
+    F --> G["Hidden state h_t"]
 ```
 
 - Pros: explicit cell state + gates, generally strong for long/complex temporal dependencies.
@@ -111,10 +112,10 @@ flowchart LR
 
 ## Why LSTM Is Preferred Here
 
-For this notebook’s objective (stable next-step OHLC forecasting on noisy market data), LSTM is a practical default because:
+For this notebook?s objective (stable next-step OHLC forecasting on noisy market data), LSTM is a practical default because:
 - it preserves useful context over longer spans better than vanilla RNN,
 - it is typically more stable on non-stationary sequence behavior,
-- it aligns well with the notebook’s sequence-window design and evaluation setup.
+- it aligns well with the notebook?s sequence-window design and evaluation setup.
 
 Note: this notebook currently implements **LSTM only**. The RNN/GRU comparison above is architectural reasoning. For strict empirical comparison, train all three under identical splits/hyperparameters.
 
