@@ -58,77 +58,27 @@ The architecture consists of:
 
 ```mermaid
 graph TD
+    IN(["Input\n(30, 5)"])
 
-    %% ── Row Labels (left-anchors) ──
-    LI["Input Layer\n(30, 5)"]
-    L1["LSTM Layer 1\n96 Units\nreturn_seq=True\nOut: (30,96)"]
-    L2["LSTM Layer 2\n96 Units\nreturn_seq=False\nOut: (96,)"]
-    LD["Dense Layer\n25 Neurons | ReLU\nOut: (25,)"]
-    LO["Output Layer\n1 Neuron | Linear\nOut: (1,)"]
+    D1["LSTM Layer 1\n96 Units · return_sequences=True\nOutput: (30, 96)"]
 
-    %% ── Input timesteps ──
-    X1["X₁\nDay 1"] --> X2["X₂\nDay 2"] --> X3["X₃\nDay 3"] --> Xd(("...")) --> XN["X₃₀\nDay 30"]
+    D2["LSTM Layer 2\n96 Units · return_sequences=False\nOutput: (96,)"]
 
-    %% ── LSTM 1 timesteps ──
-    H11(("h¹₁")) --> H12(("h¹₂")) --> H13(("h¹₃")) --> H1d(("...")) --> H1N(("h¹₃₀"))
+    D3["Dense Layer\n25 Neurons · ReLU\nOutput: (25,)"]
 
-    %% ── LSTM 2 timesteps ──
-    H21(("h²₁")) --> H22(("h²₂")) --> H23(("h²₃")) --> H2d(("...")) --> H2N(("h²₃₀"))
+    D4["Output Layer\n1 Neuron · Linear\nOutput: (1,)"]
 
-    %% ── Dense neurons ──
-    D1(("d₁")) --- D2(("d₂")) --- D3(("d₃")) --- Dd(("...")) --- D25(("d₂₅"))
+    OUT(["Predicted Close Price"])
 
-    %% ── Output ──
-    PRED(["Predicted Close Price"])
+    IN --> D1 --> D2 --> D3 --> D4 --> OUT
 
-    %% ── Vertical column connections ──
-    X1  --> H11
-    X2  --> H12
-    X3  --> H13
-    XN  --> H1N
+    style IN  fill:#ffffff,stroke:#9e9e9e,stroke-width:2px,color:#212121
+    style D1  fill:#ffffff,stroke:#9e9e9e,stroke-width:2px,color:#212121
+    style D2  fill:#ffffff,stroke:#9e9e9e,stroke-width:2px,color:#212121
+    style D3  fill:#ffffff,stroke:#9e9e9e,stroke-width:2px,color:#212121
+    style D4  fill:#ffffff,stroke:#9e9e9e,stroke-width:2px,color:#212121
+    style OUT fill:#ffffff,stroke:#9e9e9e,stroke-width:2px,color:#212121
 
-    H11 --> H21
-    H12 --> H22
-    H13 --> H23
-    H1N --> H2N
-
-    H2N --> D1
-    H2N --> D2
-    H2N --> D3
-    H2N --> D25
-
-    D1  --> PRED
-    D2  --> PRED
-    D3  --> PRED
-    D25 --> PRED
-
-    %% ── Row label connections (invisible, for alignment) ──
-    LI ~~~ X1
-    L1 ~~~ H11
-    L2 ~~~ H21
-    LD ~~~ D1
-    LO ~~~ PRED
-
-    %% ── Styling ──
-    style LI fill:#fafaf5,stroke:#bdbdbd,stroke-width:1px,color:#616161
-    style L1 fill:#fafaf5,stroke:#bdbdbd,stroke-width:1px,color:#616161
-    style L2 fill:#fafaf5,stroke:#bdbdbd,stroke-width:1px,color:#616161
-    style LD fill:#fafaf5,stroke:#bdbdbd,stroke-width:1px,color:#616161
-    style LO fill:#fafaf5,stroke:#bdbdbd,stroke-width:1px,color:#616161
-
-    classDef inputBox  fill:#f5f5f0,stroke:#9e9e9e,stroke-width:2px,color:#37474f,font-size:14px
-    classDef lstm1Node fill:#dde3e8,stroke:#78909c,stroke-width:2px,color:#263238,font-size:16px
-    classDef lstm2Node fill:#cfd6dc,stroke:#546e7a,stroke-width:2px,color:#263238,font-size:16px
-    classDef denseNode fill:#e8e8e3,stroke:#9e9e9e,stroke-width:2px,color:#37474f,font-size:16px
-    classDef outNode   fill:#f1f8e9,stroke:#7cb342,stroke-width:2.5px,color:#1b5e20,font-size:15px
-    classDef dotNode   fill:#fafafa,stroke:#e0e0e0,stroke-width:1px,color:#bdbdbd,font-size:18px
-
-    class X1,X2,X3,XN inputBox
-    class H11,H12,H13,H1N lstm1Node
-    class H21,H22,H23,H2N lstm2Node
-    class D1,D2,D3,D25 denseNode
-    class PRED outNode
-    class Xd,H1d,H2d,Dd,H2d dotNode
 
 
 ```
