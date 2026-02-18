@@ -1,155 +1,133 @@
-# NYSE LSTM Forecasting (Kaggle Ready)
+# NYSE Stock Forecasting with LSTM
 
-This repository contains **one notebook**:
-- `nyse-stock-forecasting-fresh-flow.ipynb`
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" />
+  <img src="https://img.shields.io/badge/TensorFlow-FF6F00?style=for-the-badge&logo=tensorflow&logoColor=white" />
+  <img src="https://img.shields.io/badge/Keras-D00000?style=for-the-badge&logo=keras&logoColor=white" />
+  <img src="https://img.shields.io/badge/Plotly-3F4F75?style=for-the-badge&logo=plotly&logoColor=white" />
+  <img src="https://img.shields.io/badge/Scikit--learn-F7931E?style=for-the-badge&logo=scikit-learn&logoColor=white" />
+</p>
 
-The notebook builds an end-to-end LSTM forecasting pipeline for NYSE stock OHLC data, with clean visual analysis, preprocessing checks, training diagnostics, and deployment artifacts.
+---
 
-## Dataset
+## 🚀 Project Overview
 
-This notebook uses the Kaggle NYSE dataset:
-- Dataset: **dgawlik/nyse**
-- Kaggle path used in notebook: `/kaggle/input/datasets/dgawlik/nyse/prices-split-adjusted.csv`
-- Kaggle URL: `https://www.kaggle.com/datasets/dgawlik/nyse`
+This repository features a **comprehensive, end-to-end LSTM pipeline** designed for forecasting New York Stock Exchange (NYSE) data. It is specifically optimized for Kaggle environments, providing a seamless flow from raw data ingestion to production-ready model artifacts.
 
-## Ticker Used
+### 🎯 Key Highlights
+- **End-to-End Workflow**: Covers data validation, EDA, preprocessing, training, and artifact export.
+- **Interactive EDA**: Utilizes `Plotly` for high-quality, interactive financial visualizations.
+- **Robust Preprocessing**: Implements sliding window sequence construction with automated MinMax normalization.
+- **Deep Learning Architecture**: Features a stacked two-layer LSTM model with dropout regularization for time-series stability.
+- **Production Ready**: Automatically exports model checkpoints, scalars, and metadata for immediate deployment.
 
-Current configured ticker in notebook:
-- `TICKER = "EQIX"`
+---
 
-You can change the ticker in the configuration cell and rerun.
+## 📊 Implementation Flow
 
-## Implementation Flow
+The pipeline follows a rigorous data science lifecycle to ensure model reliability and performance:
 
 ```mermaid
-flowchart TD
-    A["Load Kaggle NYSE dataset"] --> B["Validate ticker"]
-    B --> C["EDA visuals: candlestick, volume, trend, returns, correlation"]
-    C --> D["Preprocess: drop date/symbol/volume and keep OHLC"]
-    D --> E["Normalize OHLC with MinMax"]
-    E --> F["Build sliding window sequences"]
-    F --> G["Split to train / validation / test"]
-    G --> H["Build two-layer LSTM"]
-    H --> I["Train with early stopping and checkpoint"]
-    I --> J["Evaluate with MAE, RMSE, direction accuracy"]
-    J --> K["Plot predictions and residuals"]
-    K --> L["Export artifacts (.keras, config.json, preprocess_meta.pkl)"]
+flowchart LR
+    A["📥 Load Data"] --> B["🔍 Validate"]
+    B --> C["📉 Visual EDA"]
+    C --> D["⚙️ Preprocess"]
+    D --> E["🧠 LSTM Train"]
+    E --> F["🧪 Evaluate"]
+    F --> G["📦 Artifacts"]
+
+    style A fill:#1e293b,stroke:#3b82f6,color:#fff
+    style G fill:#064e3b,stroke:#10b981,color:#fff
 ```
 
-## Why This Pipeline
+### 1. Exploratory Data Analysis (EDA)
+The notebook generates deep insights using:
+- **Candlestick Charts**: Visualizing price action and volume distribution.
+- **Moving Averages**: Analyzing trends with 20-day and 60-day window averages.
+- **Return Analysis**: Histograms of daily returns to understand market volatility.
+- **Feature Correlation**: Heatmaps identifying relationships between OHLC (Open, High, Low, Close) features.
 
-- Stock data is sequential and time-dependent, so recurrent models are natural candidates.
-- LSTM is robust for longer dependencies and noisy financial sequences.
-- The notebook includes preprocessing verification charts (before vs after normalization) to reduce silent data issues.
-- Export artifacts make the notebook usable beyond experimentation (Kaggle working directory output).
-
-## LSTM Architecture Used
-
-From the notebook config:
-- Sequence length: `30`
-- Input features to model: `OHLC` (`open`, `high`, `low`, `close`)
-- LSTM layers: `2`
-- Units per LSTM layer: `96`
-- Dropout: `0.15` after each LSTM layer
-- Output: `Dense(4)` for next-step OHLC prediction
-- Loss: `MSE`
-- Optimizer: `Adam(learning_rate=0.001)`
-- Train setup: `batch_size=64`, `epochs=40`, with early stopping
+### 2. Neural Architecture
+The model leverages a **Stacked LSTM** structure optimized for capturing both short-term noise and long-term temporal dependencies:
 
 ```mermaid
 flowchart TB
-    A["Input Sequence
-    (29 timesteps x 4 features)"] --> B["LSTM Block 1
-    96 units, return_sequences=True"]
-    B --> C["Dropout
-    rate = 0.15"]
-    C --> D["LSTM Block 2
-    96 units, return_sequences=False"]
-    D --> E["Dropout
-    rate = 0.15"]
-    E --> F["Dense Output Layer
-    4 neurons (open, high, low, close)"]
-    F --> G["Predicted Next OHLC"]
+    Input["Input Window (29 Days)"] --> LSTM1["LSTM Layer 1 (96 Units)"]
+    LSTM1 --> Drop1["Dropout (15%)"]
+    Drop1 --> LSTM2["LSTM Layer 2 (96 Units)"]
+    LSTM2 --> Drop2["Dropout (15%)"]
+    Drop2 --> Dense["Dense Output Layer (4 Neurons)"]
+    Dense --> Output["Next-Step OHLC Forecast"]
 
-    classDef layer fill:#1f2937,stroke:#60a5fa,stroke-width:2px,color:#ffffff;
-    classDef input fill:#0b3b2e,stroke:#34d399,stroke-width:2px,color:#ffffff;
-    classDef output fill:#3b0b2f,stroke:#f472b6,stroke-width:2px,color:#ffffff;
-
-    class A input;
-    class B,C,D,E,F layer;
-    class G output;
+    classDef layer fill:#f8fafc,stroke:#334155,stroke-width:2px;
+    classDef io fill:#eff6ff,stroke:#2563eb,stroke-width:2px;
+    class LSTM1,LSTM2,Drop1,Drop2,Dense layer;
+    class Input,Output io;
 ```
 
-## RNN vs GRU vs LSTM (Architecture View)
+| Hyperparameter | Value |
+| :--- | :--- |
+| **Lookback Window** | 29 Days |
+| **LSTM Units** | 96 per layer |
+| **Dropout Rate** | 0.15 |
+| **Loss Function** | Mean Squared Error (MSE) |
+| **Optimizer** | Adam (LR: 0.001) |
+| **Batch Size** | 64 |
+| **Features** | 4 (Open, High, Low, Close) |
 
-### Vanilla RNN (conceptual)
+---
 
-```mermaid
-flowchart LR
-    A["x_t"] --> B["Hidden state h_t = tanh(Wx + Uh + b)"]
-    B --> C["y_t"]
+## 🛠️ Getting Started
+
+### Prerequisites
+- Python 3.8+
+- TensorFlow 2.x
+- Pandas, NumPy, Scikit-learn, Plotly
+
+### Dataset
+This project uses the **Kaggle NYSE Dataset**:
+- **Dataset ID**: `dgawlik/nyse`
+- **Path**: `/kaggle/input/datasets/dgawlik/nyse/prices-split-adjusted.csv`
+
+### How to Run
+1.  Upload `nyse-stock-forecasting-fresh-flow.ipynb` to a Kaggle Notebook.
+2.  Add the `dgawlik/nyse` dataset to your environment.
+3.  (Optional) Modify the `TICKER` variable in the Configuration cell to forecast a specific stock (Default: `EQIX`).
+4.  Execute all cells.
+
+---
+
+## 📦 Deployment & Artifacts
+
+Upon completion, the pipeline exports all necessary components to `/kaggle/working/nyse_lstm_artifacts`:
+
+| Artifact | Purpose |
+| :--- | :--- |
+| `nyse_lstm_ohlc.keras` | The final trained model file. |
+| `best_lstm.keras` | The best performing checkpoint (lowest validation loss). |
+| `config.json` | Stores hyperparameters and feature mapping. |
+| `preprocess_meta.pkl` | Crucial metadata for inverse scaling and inference consistency. |
+
+### Inference Snippet
+```python
+# Quick example of how to use the saved model
+from tensorflow.keras.models import load_model
+model = load_model('nyse_lstm_ohlc.keras')
+prediction = model.predict(normalized_input_window)
 ```
 
-- Pros: simple, fast, fewer parameters.
-- Limitation: struggles with long-term dependencies (vanishing gradients).
+---
 
-### GRU (conceptual)
+## 🔬 Experimental Comparison (RNN vs GRU vs LSTM)
 
-```mermaid
-flowchart LR
-    A["x_t and h_{t-1}"] --> B["Update gate z_t"]
-    A --> C["Reset gate r_t"]
-    A --> D["Candidate state h_t_tilde"]
-    C --> D
-    B --> E["h_t = (1 - z_t) * h_{t-1} + z_t * h_t_tilde"]
-    D --> E
-```
+While this project defaults to LSTM for its stability with long-term dependencies, here is a conceptual breakdown of why it was chosen:
 
-- Pros: faster than LSTM, fewer gates/parameters.
-- Limitation: less explicit memory control than LSTM in some long-horizon patterns.
+- **Vanilla RNN**: Simple and fast, but prone to **Vanishing Gradients** in longer sequences.
+- **GRU (Gated Recurrent Unit)**: Efficient and often faster than LSTM; great for medium-length patterns.
+- **LSTM (Long Short-Term Memory)**: Includes an explicit "Cell State" for fine-grained memory control, making it the most robust for volatile stock sequences.
 
-### LSTM (conceptual)
+---
 
-```mermaid
-flowchart LR
-    A["x_t, h_{t-1}, c_{t-1}"] --> B["Forget gate f_t"]
-    A --> C["Input gate i_t"]
-    A --> D["Candidate cell c_t_tilde"]
-    B --> E["Cell state c_t"]
-    C --> E
-    D --> E
-    E --> F["Output gate o_t"]
-    F --> G["Hidden state h_t"]
-```
-
-- Pros: explicit cell state + gates, generally strong for long/complex temporal dependencies.
-- Tradeoff: heavier than GRU/RNN.
-
-## Why LSTM Is Preferred Here
-
-For this notebook?s objective (stable next-step OHLC forecasting on noisy market data), LSTM is a practical default because:
-- it preserves useful context over longer spans better than vanilla RNN,
-- it is typically more stable on non-stationary sequence behavior,
-- it aligns well with the notebook?s sequence-window design and evaluation setup.
-
-Note: this notebook currently implements **LSTM only**. The RNN/GRU comparison above is architectural reasoning. For strict empirical comparison, train all three under identical splits/hyperparameters.
-
-## Kaggle Run Steps
-
-1. Open `nyse-stock-forecasting-fresh-flow.ipynb` in Kaggle.
-2. Ensure the dataset `dgawlik/nyse` is attached.
-3. Run all cells top-to-bottom.
-4. Review metrics/plots.
-5. Collect exported artifacts from `/kaggle/working/nyse_lstm_artifacts`.
-
-## Deployment Artifacts Produced
-
-- `nyse_lstm_ohlc.keras` (final model)
-- `best_lstm.keras` (best checkpoint)
-- `config.json` (run configuration)
-- `preprocess_meta.pkl` (preprocessing metadata)
-
-## Notes
-
-- Keep preprocessing consistent between training and inference.
-- If you change feature engineering, retrain and regenerate artifacts.
+<p align="center">
+  <i>Developed for professional-grade stock forecasting and deployment research.</i>
+</p>
