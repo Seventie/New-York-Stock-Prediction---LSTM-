@@ -56,6 +56,7 @@ The architecture consists of:
 - **Layer Stacking**: Two sequential LSTM layers to extract both short-term volatility and long-term trends.
 - **Output**: A single regression output predicting the next trading day's closing price.
 
+```mermaid
 graph TD
     subgraph Input ["Input Layer"]
         direction TB
@@ -117,6 +118,7 @@ graph TD
     class H21,H22,H23,H24,H25,H2dots lstm2Style
     class H31,H32,H33,H34,H35,H3dots lstm3Style
     class Target targetStyle
+```
 
 
 | Hyperparameter | Value |
