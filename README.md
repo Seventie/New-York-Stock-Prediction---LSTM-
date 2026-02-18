@@ -57,67 +57,80 @@ The architecture consists of:
 - **Output**: A single regression output predicting the next trading day's closing price.
 
 ```mermaid
-graph TD
-    subgraph Input ["Input Layer"]
+graph LR
+    subgraph Input ["Input Layer  |  Shape: (30, 5)"]
         direction TB
-        X1((x₁)) --- X2((x₂)) --- X3((x₃)) --- X4((x₄)) --- X5((x₅)) --- Xdots[...]
+        I1[Open]
+        I2[High]
+        I3[Low]
+        I4[Close]
+        I5[Volume]
     end
 
-    subgraph LSTM1 ["1st LSTM (96 Units)"]
+    subgraph LSTM1 ["LSTM Layer 1  |  96 Units  |  return_sequences=True"]
         direction TB
-        H11((h¹₁)) --- H12((h¹₂)) --- H13((h¹₃)) --- H14((h¹₄)) --- H15((h¹₅)) --- H1dots[...]
+        L1_t1(( t1 ))
+        L1_t2(( t2 ))
+        L1_t3(( t3 ))
+        L1_td(( ... ))
+        L1_tN(( t30 ))
+        L1_t1 --> L1_t2 --> L1_t3 --> L1_td --> L1_tN
     end
 
-    subgraph LSTM2 ["2nd LSTM (96 Units)"]
+    subgraph LSTM2 ["LSTM Layer 2  |  96 Units  |  return_sequences=False"]
         direction TB
-        H21((h²₁)) --- H22((h²₂)) --- H23((h²₃)) --- H24((h²₄)) --- H25((h²₅)) --- H2dots[...]
+        L2_t1(( t1 ))
+        L2_t2(( t2 ))
+        L2_t3(( t3 ))
+        L2_td(( ... ))
+        L2_tN(( t30 ))
+        L2_t1 --> L2_t2 --> L2_t3 --> L2_td --> L2_tN
     end
 
-    subgraph LSTM3 ["3rd LSTM (96 Units)"]
+    subgraph Dense1 ["Dense Layer  |  25 Neurons  |  ReLU"]
         direction TB
-        H31((h³₁)) --- H32((h³₂)) --- H33((h³₃)) --- H34((h³₄)) --- H35((h³₅)) --- H3dots[...]
+        D1_1(( n1 ))
+        D1_2(( n2 ))
+        D1_3(( ... ))
+        D1_N(( n25 ))
     end
 
-    Target["🎯 Target:<br/>Close Price"]
+    subgraph Output ["Output Layer  |  1 Neuron  |  Linear"]
+        direction TB
+        OUT[Predicted\nClose Price]
+    end
 
-    %% Recurrent connections (horizontal arrows within each layer)
-    X1 -.-> X2 -.-> X3 -.-> X4 -.-> X5
-    H11 -.-> H12 -.-> H13 -.-> H14 -.-> H15
-    H21 -.-> H22 -.-> H23 -.-> H24 -.-> H25
-    H31 -.-> H32 -.-> H33 -.-> H34 -.-> H35
+    %% Main left-to-right flow
+    Input   --> LSTM1
+    LSTM1   --> LSTM2
+    L2_tN   --> Dense1
+    Dense1  --> Output
 
-    %% Vertical feedforward between layers (same timestep)
-    X1 --> H11
-    X2 --> H12
-    X3 --> H13
-    X4 --> H14
-    X5 --> H15
-    H11 --> H21
-    H12 --> H22
-    H13 --> H23
-    H14 --> H24
-    H15 --> H25
-    H21 --> H31
-    H22 --> H32
-    H23 --> H33
-    H24 --> H34
-    H25 --> H35
+    %% Annotations on arrows
+    Input   -->|"(30, 5)"| LSTM1
+    LSTM1   -->|"(30, 96)"| LSTM2
+    L2_tN   -->|"(96,)"| Dense1
+    Dense1  -->|"(25,)"| Output
 
-    %% Final output connection
-    H35 --> Target
+    %% Professional muted styling
+    style Input  fill:#f5f5f0,stroke:#9e9e9e,stroke-width:2px,color:#212121
+    style LSTM1  fill:#f0f4f8,stroke:#90a4ae,stroke-width:2px,color:#212121
+    style LSTM2  fill:#eceff1,stroke:#78909c,stroke-width:2px,color:#212121
+    style Dense1 fill:#fafaf7,stroke:#bdbdbd,stroke-width:2px,color:#212121
+    style Output fill:#f1f8e9,stroke:#aed581,stroke-width:2px,color:#212121
 
-    %% Exact color matching from your reference + white BG
-    classDef inputStyle fill:#4fc3f7,stroke:#0277bd,stroke-width:3px,color:#fff
-    classDef lstm1Style fill:#2196f3,stroke:#1976d2,stroke-width:3px,color:#fff
-    classDef lstm2Style fill:#ffeb3b,stroke:#fbc02d,stroke-width:3px,color:#000
-    classDef lstm3Style fill:#f44336,stroke:#d32f2f,stroke-width:3px,color:#fff
-    classDef targetStyle fill:#66bb6a,stroke:#388e3c,stroke-width:3px,color:#fff
+    classDef inputNode  fill:#eeeeee,stroke:#9e9e9e,stroke-width:1.5px,color:#424242
+    classDef lstm1Node  fill:#e3eaf2,stroke:#90a4ae,stroke-width:1.5px,color:#37474f
+    classDef lstm2Node  fill:#dce4ea,stroke:#78909c,stroke-width:1.5px,color:#37474f
+    classDef denseNode  fill:#f0f0ec,stroke:#bdbdbd,stroke-width:1.5px,color:#424242
+    classDef outNode    fill:#e8f5e9,stroke:#a5d6a7,stroke-width:2px,color:#1b5e20
 
-    class X1,X2,X3,X4,X5,Xdots inputStyle
-    class H11,H12,H13,H14,H15,H1dots lstm1Style
-    class H21,H22,H23,H24,H25,H2dots lstm2Style
-    class H31,H32,H33,H34,H35,H3dots lstm3Style
-    class Target targetStyle
+    class I1,I2,I3,I4,I5 inputNode
+    class L1_t1,L1_t2,L1_t3,L1_td,L1_tN lstm1Node
+    class L2_t1,L2_t2,L2_t3,L2_td,L2_tN lstm2Node
+    class D1_1,D1_2,D1_3,D1_N denseNode
+    class OUT outNode
+
 ```
 
 
