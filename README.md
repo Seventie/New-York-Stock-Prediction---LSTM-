@@ -56,46 +56,68 @@ The architecture consists of:
 - **Layer Stacking**: Two sequential LSTM layers to extract both short-term volatility and long-term trends.
 - **Output**: A single regression output predicting the next trading day's closing price.
 
-```mermaid
-graph LR
-    subgraph Inputs ["Input Vector (T inputs)"]
-        direction BT
-        I1(Open)
-        I2(High)
-        I3(Low)
-        I4(Close)
-        I5(Volume)
+graph TD
+    subgraph Input ["Input Layer"]
+        direction TB
+        X1((x₁)) --- X2((x₂)) --- X3((x₃)) --- X4((x₄)) --- X5((x₅)) --- Xdots[...]
     end
 
-    subgraph LSTM_Layer_1 ["LSTM Layer 1 (96 Units)"]
-        direction LR
-        L1_1((h1_t1)) --> L1_2((h1_t2)) --> L1_3((...)) --> L1_N((h1_t30))
+    subgraph LSTM1 ["1st LSTM (96 Units)"]
+        direction TB
+        H11((h¹₁)) --- H12((h¹₂)) --- H13((h¹₃)) --- H14((h¹₄)) --- H15((h¹₅)) --- H1dots[...]
     end
 
-    subgraph LSTM_Layer_2 ["LSTM Layer 2 (96 Units)"]
-        direction LR
-        L2_1((h2_t1)) --> L2_2((h2_t2)) --> L2_3((...)) --> L2_N((h2_t30))
+    subgraph LSTM2 ["2nd LSTM (96 Units)"]
+        direction TB
+        H21((h²₁)) --- H22((h²₂)) --- H23((h²₃)) --- H24((h²₄)) --- H25((h²₅)) --- H2dots[...]
     end
 
-    Target[Target: Close Price]
+    subgraph LSTM3 ["3rd LSTM (96 Units)"]
+        direction TB
+        H31((h³₁)) --- H32((h³₂)) --- H33((h³₃)) --- H34((h³₄)) --- H35((h³₅)) --- H3dots[...]
+    end
 
-    %% Connections
-    Inputs --> L1_1
-    Inputs --> L1_2
-    Inputs --> L1_N
+    Target["🎯 Target:<br/>Close Price"]
 
-    L1_1 --> L2_1
-    L1_2 --> L2_2
-    L1_N --> L2_N
+    %% Recurrent connections (horizontal arrows within each layer)
+    X1 -.-> X2 -.-> X3 -.-> X4 -.-> X5
+    H11 -.-> H12 -.-> H13 -.-> H14 -.-> H15
+    H21 -.-> H22 -.-> H23 -.-> H24 -.-> H25
+    H31 -.-> H32 -.-> H33 -.-> H34 -.-> H35
 
-    L2_N --> Target
+    %% Vertical feedforward between layers (same timestep)
+    X1 --> H11
+    X2 --> H12
+    X3 --> H13
+    X4 --> H14
+    X5 --> H15
+    H11 --> H21
+    H12 --> H22
+    H13 --> H23
+    H14 --> H24
+    H15 --> H25
+    H21 --> H31
+    H22 --> H32
+    H23 --> H33
+    H24 --> H34
+    H25 --> H35
 
-    %% Styling
-    style Inputs fill:#e1f5fe,stroke:#01579b
-    style LSTM_Layer_1 fill:#fff9c4,stroke:#fbc02d
-    style LSTM_Layer_2 fill:#ffe0b2,stroke:#f57c00
-    style Target fill:#c8e6c9,stroke:#2e7d32
-```
+    %% Final output connection
+    H35 --> Target
+
+    %% Exact color matching from your reference + white BG
+    classDef inputStyle fill:#4fc3f7,stroke:#0277bd,stroke-width:3px,color:#fff
+    classDef lstm1Style fill:#2196f3,stroke:#1976d2,stroke-width:3px,color:#fff
+    classDef lstm2Style fill:#ffeb3b,stroke:#fbc02d,stroke-width:3px,color:#000
+    classDef lstm3Style fill:#f44336,stroke:#d32f2f,stroke-width:3px,color:#fff
+    classDef targetStyle fill:#66bb6a,stroke:#388e3c,stroke-width:3px,color:#fff
+
+    class X1,X2,X3,X4,X5,Xdots inputStyle
+    class H11,H12,H13,H14,H15,H1dots lstm1Style
+    class H21,H22,H23,H24,H25,H2dots lstm2Style
+    class H31,H32,H33,H34,H35,H3dots lstm3Style
+    class Target targetStyle
+
 
 | Hyperparameter | Value |
 | :--- | :--- |
