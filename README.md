@@ -47,22 +47,54 @@ The notebook generates deep insights using:
 - **Return Analysis**: Histograms of daily returns to understand market volatility.
 - **Feature Correlation**: Heatmaps identifying relationships between OHLC (Open, High, Low, Close) features.
 
-### 2. Neural Architecture
-The model leverages a **Stacked LSTM** structure optimized for capturing both short-term noise and long-term temporal dependencies:
+
+### 2. Neural Architecture with Stacked LSTM
+The model utilizes a **Stacked LSTM** architecture, designed to process sequential data with multiple levels of abstraction. 
+
+The architecture consists of:
+- **Input Channels**: 5 distinct market indicators (Open, High, Low, Close, Volume).
+- **Layer Stacking**: Two sequential LSTM layers to extract both short-term volatility and long-term trends.
+- **Output**: A single regression output predicting the next trading day's closing price.
 
 ```mermaid
-flowchart TB
-    Input["Input Window (29 Days)"] --> LSTM1["LSTM Layer 1 (96 Units)"]
-    LSTM1 --> Drop1["Dropout (15%)"]
-    Drop1 --> LSTM2["LSTM Layer 2 (96 Units)"]
-    LSTM2 --> Drop2["Dropout (15%)"]
-    Drop2 --> Dense["Dense Output Layer (4 Neurons)"]
-    Dense --> Output["Next-Step OHLC Forecast"]
+graph LR
+    subgraph Inputs ["Input Vector (T inputs)"]
+        direction BT
+        I1(Open)
+        I2(High)
+        I3(Low)
+        I4(Close)
+        I5(Volume)
+    end
 
-    classDef layer fill:#f8fafc,stroke:#334155,stroke-width:2px;
-    classDef io fill:#eff6ff,stroke:#2563eb,stroke-width:2px;
-    class LSTM1,LSTM2,Drop1,Drop2,Dense layer;
-    class Input,Output io;
+    subgraph LSTM_Layer_1 ["LSTM Layer 1 (96 Units)"]
+        direction LR
+        L1_1((h1_t1)) --> L1_2((h1_t2)) --> L1_3((...)) --> L1_N((h1_t30))
+    end
+
+    subgraph LSTM_Layer_2 ["LSTM Layer 2 (96 Units)"]
+        direction LR
+        L2_1((h2_t1)) --> L2_2((h2_t2)) --> L2_3((...)) --> L2_N((h2_t30))
+    end
+
+    Target[Target: Close Price]
+
+    %% Connections
+    Inputs --> L1_1
+    Inputs --> L1_2
+    Inputs --> L1_N
+
+    L1_1 --> L2_1
+    L1_2 --> L2_2
+    L1_N --> L2_N
+
+    L2_N --> Target
+
+    %% Styling
+    style Inputs fill:#e1f5fe,stroke:#01579b
+    style LSTM_Layer_1 fill:#fff9c4,stroke:#fbc02d
+    style LSTM_Layer_2 fill:#ffe0b2,stroke:#f57c00
+    style Target fill:#c8e6c9,stroke:#2e7d32
 ```
 
 | Hyperparameter | Value |
