@@ -58,78 +58,99 @@ The architecture consists of:
 
 ```mermaid
 graph LR
-    subgraph Input ["Input Layer  |  Shape: (30, 5)"]
-        direction TB
-        I1[Open]
-        I2[High]
-        I3[Low]
-        I4[Close]
-        I5[Volume]
+
+    %% ── Input Layer Row ──────────────────────────────────────
+    subgraph IL ["Input Layer  |  Shape (30, 5)"]
+        direction LR
+        X1["X₁\nOpen,High\nLow,Close\nVolume"]
+        X2["X₂\nOpen,High\nLow,Close\nVolume"]
+        X3["X₃\nOpen,High\nLow,Close\nVolume"]
+        Xd["  ...  "]
+        XN["X₃₀\nOpen,High\nLow,Close\nVolume"]
+        X1 --> X2 --> X3 --> Xd --> XN
     end
 
-    subgraph LSTM1 ["LSTM Layer 1  |  96 Units  |  return_sequences=True"]
-        direction TB
-        L1_t1(( t1 ))
-        L1_t2(( t2 ))
-        L1_t3(( t3 ))
-        L1_td(( ... ))
-        L1_tN(( t30 ))
-        L1_t1 --> L1_t2 --> L1_t3 --> L1_td --> L1_tN
+    %% ── LSTM Layer 1 Row ─────────────────────────────────────
+    subgraph L1 ["LSTM Layer 1  |  96 Units  |  return_sequences = True  |  Output: (30, 96)"]
+        direction LR
+        H11(["h¹₁"])
+        H12(["h¹₂"])
+        H13(["h¹₃"])
+        H1d["  ...  "]
+        H1N(["h¹₃₀"])
+        H11 --> H12 --> H13 --> H1d --> H1N
     end
 
-    subgraph LSTM2 ["LSTM Layer 2  |  96 Units  |  return_sequences=False"]
-        direction TB
-        L2_t1(( t1 ))
-        L2_t2(( t2 ))
-        L2_t3(( t3 ))
-        L2_td(( ... ))
-        L2_tN(( t30 ))
-        L2_t1 --> L2_t2 --> L2_t3 --> L2_td --> L2_tN
+    %% ── LSTM Layer 2 Row ─────────────────────────────────────
+    subgraph L2 ["LSTM Layer 2  |  96 Units  |  return_sequences = False  |  Output: (96,)"]
+        direction LR
+        H21(["h²₁"])
+        H22(["h²₂"])
+        H23(["h²₃"])
+        H2d["  ...  "]
+        H2N(["h²₃₀"])
+        H21 --> H22 --> H23 --> H2d --> H2N
     end
 
-    subgraph Dense1 ["Dense Layer  |  25 Neurons  |  ReLU"]
-        direction TB
-        D1_1(( n1 ))
-        D1_2(( n2 ))
-        D1_3(( ... ))
-        D1_N(( n25 ))
+    %% ── Dense Layer Row ──────────────────────────────────────
+    subgraph D1 ["Dense Layer  |  25 Neurons  |  ReLU Activation  |  Output: (25,)"]
+        direction LR
+        DN1(["d₁"])
+        DN2(["d₂"])
+        DN3(["d₃"])
+        DNd["  ...  "]
+        DN25(["d₂₅"])
     end
 
-    subgraph Output ["Output Layer  |  1 Neuron  |  Linear"]
-        direction TB
-        OUT[Predicted\nClose Price]
+    %% ── Output Layer ─────────────────────────────────────────
+    subgraph OUT ["Output Layer  |  1 Neuron  |  Linear  |  Output: (1,)"]
+        direction LR
+        PRED["Predicted\nClose Price"]
     end
 
-    %% Main left-to-right flow
-    Input   --> LSTM1
-    LSTM1   --> LSTM2
-    L2_tN   --> Dense1
-    Dense1  --> Output
+    %% ── Vertical column connections (same timestep) ──────────
+    X1  --> H11
+    X2  --> H12
+    X3  --> H13
+    XN  --> H1N
 
-    %% Annotations on arrows
-    Input   -->|"(30, 5)"| LSTM1
-    LSTM1   -->|"(30, 96)"| LSTM2
-    L2_tN   -->|"(96,)"| Dense1
-    Dense1  -->|"(25,)"| Output
+    H11 --> H21
+    H12 --> H22
+    H13 --> H23
+    H1N --> H2N
 
-    %% Professional muted styling
-    style Input  fill:#f5f5f0,stroke:#9e9e9e,stroke-width:2px,color:#212121
-    style LSTM1  fill:#f0f4f8,stroke:#90a4ae,stroke-width:2px,color:#212121
-    style LSTM2  fill:#eceff1,stroke:#78909c,stroke-width:2px,color:#212121
-    style Dense1 fill:#fafaf7,stroke:#bdbdbd,stroke-width:2px,color:#212121
-    style Output fill:#f1f8e9,stroke:#aed581,stroke-width:2px,color:#212121
+    %% Only final hidden state feeds forward (many-to-one)
+    H2N --> DN1
+    H2N --> DN2
+    H2N --> DN3
+    H2N --> DN25
 
-    classDef inputNode  fill:#eeeeee,stroke:#9e9e9e,stroke-width:1.5px,color:#424242
-    classDef lstm1Node  fill:#e3eaf2,stroke:#90a4ae,stroke-width:1.5px,color:#37474f
-    classDef lstm2Node  fill:#dce4ea,stroke:#78909c,stroke-width:1.5px,color:#37474f
-    classDef denseNode  fill:#f0f0ec,stroke:#bdbdbd,stroke-width:1.5px,color:#424242
-    classDef outNode    fill:#e8f5e9,stroke:#a5d6a7,stroke-width:2px,color:#1b5e20
+    DN1  --> PRED
+    DN2  --> PRED
+    DN3  --> PRED
+    DN25 --> PRED
 
-    class I1,I2,I3,I4,I5 inputNode
-    class L1_t1,L1_t2,L1_t3,L1_td,L1_tN lstm1Node
-    class L2_t1,L2_t2,L2_t3,L2_td,L2_tN lstm2Node
-    class D1_1,D1_2,D1_3,D1_N denseNode
-    class OUT outNode
+    %% ── Professional muted palette ───────────────────────────
+    style IL  fill:#f5f5f0,stroke:#9e9e9e,stroke-width:2px,color:#212121
+    style L1  fill:#e8edf2,stroke:#78909c,stroke-width:2px,color:#212121
+    style L2  fill:#edf2f7,stroke:#607d8b,stroke-width:2px,color:#212121
+    style D1  fill:#f7f7f2,stroke:#bdbdbd,stroke-width:2px,color:#212121
+    style OUT fill:#f1f8e9,stroke:#aed581,stroke-width:2px,color:#1b5e20
+
+    classDef inputBox  fill:#ececec,stroke:#9e9e9e,stroke-width:1.5px,color:#424242,font-size:13px
+    classDef lstm1Cell fill:#cfd8dc,stroke:#78909c,stroke-width:1.5px,color:#263238,font-size:15px
+    classDef lstm2Cell fill:#b0bec5,stroke:#546e7a,stroke-width:1.5px,color:#263238,font-size:15px
+    classDef denseCell fill:#e0e0da,stroke:#9e9e9e,stroke-width:1.5px,color:#424242,font-size:15px
+    classDef outCell   fill:#dcedc8,stroke:#7cb342,stroke-width:2px,color:#1b5e20,font-size:14px
+    classDef dotCell   fill:#fafafa,stroke:#e0e0e0,stroke-width:1px,color:#9e9e9e,font-size:16px
+
+    class X1,X2,X3,XN inputBox
+    class H11,H12,H13,H1N lstm1Cell
+    class H21,H22,H23,H2N lstm2Cell
+    class DN1,DN2,DN3,DN25 denseCell
+    class PRED outCell
+    class Xd,H1d,H2d,DNd dotCell
+
 
 ```
 
